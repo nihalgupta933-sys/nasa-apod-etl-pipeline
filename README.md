@@ -23,11 +23,11 @@ An automated data engineering pipeline that orchestrates the daily extraction, t
 
 ### 1. 💻 Code Construction & DAG Definition
 The core ETL pipeline is modularized within VS Code using custom Airflow connection hooks to keep database credentials and external API authentication secrets safely out of source control.
-![Local Development Environment](./ss/Screenshot%202026-08-22%20131117.png)
+![Local Development Environment](./ss/Screenshot%202026-08-22%20131052.png)
 
 ### 2. 🔄 Debugging History & Run Optimization
 The pipeline status chart highlights our development lifecycle. The initial red markings show runtime mapping failures encountered while testing and refining database constraint criteria. After debugging structural column mappings, the sequential runs execute completely green—achieving 100% data execution success.
-![Airflow DAG History Status](./ss/Screenshot%202026-08-22%20131052.png)
+![Airflow DAG History Status](./ss/Screenshot%202026-08-22%20131117.png)
 
 ### 3. 🔌 Verified Airflow Connections
 Secure connections for both the destination database mapping layer (`my_postgres_connection`) and the target network ingestion endpoint (`nasa_api`) are managed natively within Airflow Admin parameters.
