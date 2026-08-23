@@ -1,45 +1,55 @@
-Overview
-========
+# 🌌 NASA APOD ETL Pipeline with Apache Airflow & PostgreSQL
 
-Welcome to Astronomer! This project was generated after you ran 'astro dev init' using the Astronomer CLI. This readme describes the contents of the project, as well as how to run Apache Airflow on your local machine.
+An automated data engineering pipeline that orchestrates the daily extraction, transformation, and loading (ETL) of NASA's Astronomy Picture of the Day (APOD) metadata into a local containerized PostgreSQL database.
 
-Project Contents
-================
+## 🚀 Architecture Overview
+- **Framework & Runtime:** Powered by Astro (Astronomer CLI) for robust local dependency management and scaffolding.
+- **Orchestration Engine:** Apache Airflow 2.x utilizing the modern TaskFlow API (`@task` decorator) mixed with traditional operators.
+- **Data Source Ingestion:** Integrated directly with the **NASA Open API Engine** (`planetary/apod`) to fetch high-resolution cosmic metadata daily.
+- **Target Storage Engine:** PostgreSQL 13 running within an isolated Docker network.
 
-Your Astro project contains the following files and folders:
+---
 
-- dags: This folder contains the Python files for your Airflow DAGs. By default, this directory includes one example DAG:
-    - `example_astronauts`: This DAG shows a simple ETL pipeline example that queries the list of astronauts currently in space from the Open Notify API and prints a statement for each astronaut. The DAG uses the TaskFlow API to define tasks in Python, and dynamic task mapping to dynamically print a statement for each astronaut. For more on how this DAG works, see our [Getting started tutorial](https://www.astronomer.io/docs/learn/get-started-with-airflow).
-- Dockerfile: This file contains a versioned Astro Runtime Docker image that provides a differentiated Airflow experience. If you want to execute other commands or overrides at runtime, specify them here.
-- include: This folder contains any additional files that you want to include as part of your project. It is empty by default.
-- packages.txt: Install OS-level packages needed for your project by adding them to this file. It is empty by default.
-- requirements.txt: Install Python packages needed for your project by adding them to this file. It is empty by default.
-- plugins: Add custom or community plugins for your project to this file. It is empty by default.
-- airflow_settings.yaml: Use this local-only file to specify Airflow Connections, Variables, and Pools instead of entering them in the Airflow UI as you develop DAGs in this project.
+## 🛠️ Pipeline Workflow (DAG: `nasa_postgres`)
 
-Deploy Your Project Locally
-===========================
+1. **DDL Pre-checks (`create_table`):** Initializes a connection via `PostgresHook` to check and generate the target database schema structure safely.
+2. **Data Extraction (`extract_apod`):** A dedicated `HttpOperator` securely passes environment configurations to pull daily JSON telemetry payloads from the NASA API.
+3. **Data Transformation (`transform_apod_data`):** Python dictionary parsing normalizes unstructured responses, filtering default fallbacks for potential missing API fields.
+4. **Data Loading (`load_data_to_postgres`):** Uses parameterized multi-variable inputs via raw SQL execution to prevent injection attacks and commit rows to the storage layer.
 
-Start Airflow on your local machine by running 'astro dev start'.
+---
 
-This command will spin up five Docker containers on your machine, each for a different Airflow component:
+## 📊 Project Visuals & Execution Monitoring
 
-- Postgres: Airflow's Metadata Database
-- Scheduler: The Airflow component responsible for monitoring and triggering tasks
-- DAG Processor: The Airflow component responsible for parsing DAGs
-- API Server: The Airflow component responsible for serving the Airflow UI and API
-- Triggerer: The Airflow component responsible for triggering deferred tasks
+### 💻 Code Construction
+The core ETL pipeline is modularized using custom Airflow connections to completely separate database targets and external API authentication secrets from source control.
+![Local Development Environment](./ss/Screenshot%202026-08-22%20131117.png)
 
-When all five containers are ready the command will open the browser to the Airflow UI at http://localhost:8080/. You should also be able to access your Postgres Database at 'localhost:5432/postgres' with username 'postgres' and password 'postgres'.
+### ⚙️ Database Network Orchestration
+A custom environment using Docker Compose powers our back-end infrastructure microservices (Postgres, database migrations, scheduler, and web server triggers) simultaneously.
+![Docker Container Infrasructure](./ss/Screenshot%202026-08-22%20132522.png)
 
-Note: If you already have either of the above ports allocated, you can either [stop your existing Docker containers or change the port](https://www.astronomer.io/docs/astro/cli/troubleshoot-locally#ports-are-not-available-for-my-local-airflow-webserver).
+### 🔌 Verified Airflow Connections
+Secure connections for both the destination database mapping layer (`my_postgres_connection`) and the target network ingestion endpoint (`nasa_api`) are managed natively within Airflow Admin parameters.
+![Airflow UI Connections Setup](./ss/Screenshot%202026-08-22%20131254.png)
 
-Deploy Your Project to Astronomer
-=================================
+### 📈 Task Execution View & Real-time Logs
+A complete graph view layout of the DAG runtime environment executing sequentially across our discrete extraction, validation, and storage functions.
+![Airflow Dag Tasks Flow](./ss/Screenshot%202026-08-22%20131441.png)
 
-If you have an Astronomer account, pushing code to a Deployment on Astronomer is simple. For deploying instructions, refer to Astronomer documentation: https://www.astronomer.io/docs/astro/deploy-code/
+### 🔄 Debugging History & Code Optimization
+The pipeline status chart highlights our development lifecycle. The initial red markings show runtime mapping failures encountered while testing and refining database constraint criteria. After debugging structural column mappings, the sequential runs execute completely green—achieving 100% data execution success.
+![Airflow DAG History Status](./ss/Screenshot%202026-08-22%20130819.png)
 
-Contact
-=======
+### 📦 Output Verification (Target Database Payload)
+Executing an active analytical query (`SELECT * FROM apod_data;`) via DB-Viewer confirms that incoming raw payloads from NASA are transformed and loaded securely into our table.
+![PostgreSQL Target Table Metadata Verification](./ss/Screenshot%202026-08-22%20131653.png)
 
-The Astronomer CLI is maintained with love by the Astronomer team. To report a bug or suggest a change, reach out to our support.
+---
+
+## 🚧 Current Deployment Progress (Astronomer Cloud)
+
+Our production instance profile (`nasa-etl-prod`) is up, running, and completely healthy within the Astro Platform interface. All secure data connections are successfully mapped out behind the scenes. 
+
+*Note: I am currently addressing an issue where core DAG files are not resolving visually inside the platform cloud view. Local functionality remains fully stable, and a cloud-sync solution is currently in development.*
+![Astro Deployment Dashboard UI](./ss/Screenshot%202026-08-22%20141201.png)
